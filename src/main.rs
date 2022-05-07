@@ -37,7 +37,8 @@ fn main() {
     let A2 = convert_to_compressed(T2);
 
     // Ok now we have the sparse matrices we can print one and make sure it is what is expected
-    print_matrix(T1);
+    print_matrix(A1);
+    print_matrix(A2);
     //let mut i: Vec<i32> = vec![2, 1, 3, 0, 1, 3, 3, 1, 0, 2];
     //let mut j: Vec<i32> = vec![2, 0, 3, 2, 1, 0, 1, 3, 0, 1];
     //let mut vals: Vec<f64> = vec![3.0, 3.1, 1.0, 3.2, 2.9, 3.5, 0.4, 0.9, 4.5, 1.7];
