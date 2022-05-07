@@ -80,8 +80,8 @@ fn main() {
     }
 
     let argmaxT = create_sparse_matrix(m as i32, n as i32, &mut argmax_i[..], &mut argmax_j[..], &mut argmax_vals[..]);
+    print_matrix(argmaxT);
     let argmaxA = convert_to_compressed(argmaxT);
-
     print_matrix(argmaxA);
 
     //let mut i: Vec<i32> = vec![2, 1, 3, 0, 1, 3, 3, 1, 0, 2];
