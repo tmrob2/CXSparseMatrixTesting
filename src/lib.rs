@@ -107,6 +107,7 @@ pub fn deconstruct(A: *mut cs_di, nnz: usize, cols: usize) -> SparseMatrixCompon
         x = Vec::from_raw_parts((*A).x as *mut f64, nnz, nnz);
         i = Vec::from_raw_parts((*A).i as *mut i32, nnz, nnz);
         p = Vec::from_raw_parts((*A).p as *mut i32, cols, cols);
+        println!("Deconstruction:\ni: {:?}\np: {:?}\nx: {:?}", i, p, x);
     }
     SparseMatrixComponents {i, p, x}
 }

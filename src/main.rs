@@ -21,8 +21,8 @@ fn main() {
     let nnz2: usize = val2.len();
 
     //
-    for k in 0..m {
-        for l in 0..n {
+    for k in 0..n { // cols
+        for l in 0..m { // rows
             if k == l {
                 i1.push(l as i32);
                 j1.push(k as i32);
