@@ -40,7 +40,10 @@ fn main() {
     // Ok now we have the sparse matrices we can print one and make sure it is what is expected
     print_matrix(A1);
     print_matrix(A2);
-
+    // Initialise the matrix triple
+    let mut argmax_i: Vec<i32> = Vec::new();
+    let mut argmax_j: Vec<i32> = Vec::new();
+    let mut argmax_vals: Vec<i32> = Vec::new();
     // now I need to get rows from the original matriccies and create an 'argmax' matrix from this
     // Generate a random vector which represents a policy
     let actions_space = [0, 1];
@@ -49,11 +52,16 @@ fn main() {
     for k in 0..5 {
         for r in p[k]..p[k +1] {
             println!("row: {}, col: {}, vals: {}", i[r as usize], k, x[r as usize]);
-            ii2.push(i[r as usize]);
-            jj2.push(k as i32);
-            vals2.push(x[r as usize]);
+            argmax_j.push(i[r as usize]);
+            argmax_i.push(k as i32);
+            argmax_vals.push(x[r as usize]);
         }
     }
+
+    let argmaxT = create_sparse_matrix(n, m, &argmax_i[..], &argmax_j[..], &argmax_vals[..]);
+    let argmaxA = convert_to_compressed(argmaxT);
+
+    print_matrix(argmaxA);
 
     //let mut i: Vec<i32> = vec![2, 1, 3, 0, 1, 3, 3, 1, 0, 2];
     //let mut j: Vec<i32> = vec![2, 0, 3, 2, 1, 0, 1, 3, 0, 1];
