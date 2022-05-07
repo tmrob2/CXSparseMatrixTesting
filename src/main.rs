@@ -15,8 +15,11 @@ fn main() {
     let mut j2: Vec<i32> = Vec::new();
     let mut val2: Vec<f64> = Vec::new();
     //
-    let m: usize = 5;
-    let n: usize = 4;
+    let m: usize = 5; // m is the original number of rows
+    let n: usize = 4; // n is the original number of columns 
+    let nnz1: usize = val1.len();
+    let nnz2: usize = val2.len();
+
     //
     for k in 0..m {
         for l in 0..n {
@@ -24,9 +27,8 @@ fn main() {
                 i1.push(l as i32);
                 j1.push(k as i32);
                 val1.push(1.0);
-
                 i2.push(l as i32);
-                j2.push(l as i32);
+                j2.push(k as i32);
                 val2.push(2.0);
             }
         }
@@ -40,17 +42,32 @@ fn main() {
     // Ok now we have the sparse matrices we can print one and make sure it is what is expected
     print_matrix(A1);
     print_matrix(A2);
+    // Now we require the transpose of the matrix
+    let AT1 = transpose(A1, nnz1 as i32);
+    let AT2 = transpose(A2, nnz2 as i32);
+    // At this point we need to deconstruct the tranpose matrices into their component parts in compressed col fmt
+    let Acomp1 = deconstruct(AT1, nnz1, n);
+    let Acomp2 = deconstruct(AT2, nnz2, n);
+
     // Initialise the matrix triple
     let mut argmax_i: Vec<i32> = Vec::new();
     let mut argmax_j: Vec<i32> = Vec::new();
-    let mut argmax_vals: Vec<i32> = Vec::new();
+    let mut argmax_vals: Vec<f64> = Vec::new();
     // now I need to get rows from the original matriccies and create an 'argmax' matrix from this
     // Generate a random vector which represents a policy
     let actions_space: [i32; 2] = [0, 1];
     let mut rng = thread_rng();
-    let rnd: Vec<i32> = (0..m).map(|_| *actions_space.choose(&mut rng).unwrap() ).collect();
-    for k in 0..5 {
-        for r in p[k]..p[k +1] {
+    let rnd: Vec<i32> = (0..n).map(|_| *actions_space.choose(&mut rng).unwrap() ).collect();
+    for k in 0..n { // for each column of the tranpose matrix
+        let matrix_components: Option<&SparseMatrixComponents> = match rnd[k] {
+            0 => Some(&Acomp1),
+            1 => Some(&Acomp2),
+            _ => None
+        };
+        let p = &matrix_components.as_ref().unwrap().p;
+        let i = &matrix_components.as_ref().unwrap().i;
+        let x = &matrix_components.as_ref().unwrap().x;
+        for r in p[k]..p[k +1] { // for each row recorded in the sparse coord list for column k
             println!("row: {}, col: {}, vals: {}", i[r as usize], k, x[r as usize]);
             argmax_j.push(i[r as usize]);
             argmax_i.push(k as i32);
@@ -58,7 +75,7 @@ fn main() {
         }
     }
 
-    let argmaxT = create_sparse_matrix(n, m, &argmax_i[..], &argmax_j[..], &argmax_vals[..]);
+    let argmaxT = create_sparse_matrix(m as i32, n as i32, &mut argmax_i[..], &mut argmax_j[..], &mut argmax_vals[..]);
     let argmaxA = convert_to_compressed(argmaxT);
 
     print_matrix(argmaxA);

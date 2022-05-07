@@ -93,6 +93,24 @@ pub fn solve_dense_lu(A: &mut [f64], b: &mut [f64], n: i32, nrhs: i32) {
     }
 }
 
+pub struct SparseMatrixComponents {
+    pub i: Vec<i32>, // row indices per column
+    pub p: Vec<i32>, // column ranges
+    pub x: Vec<f64>  // values per column row indices
+}
+
+pub fn deconstruct(A: *mut cs_di, nnz: usize, cols: usize) -> SparseMatrixComponents {
+    let x: Vec<f64>;
+    let p: Vec<i32>;
+    let i: Vec<i32>;
+    unsafe {
+        x = Vec::from_raw_parts((*A).x as *mut f64, nnz, nnz);
+        i = Vec::from_raw_parts((*A).i as *mut i32, nnz, nnz);
+        p = Vec::from_raw_parts((*A).p as *mut i32, cols, cols);
+    }
+    SparseMatrixComponents {i, p, x}
+}
+
 #[cfg(test)]
 mod tests {
     use crate::create_sparse_matrix;
