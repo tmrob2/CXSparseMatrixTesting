@@ -46,9 +46,9 @@ fn main() {
     let mut argmax_vals: Vec<i32> = Vec::new();
     // now I need to get rows from the original matriccies and create an 'argmax' matrix from this
     // Generate a random vector which represents a policy
-    let actions_space = [0, 1];
+    let actions_space: [i32; 2] = [0, 1];
     let mut rng = thread_rng();
-    let rnd = (0..m).map(|_|, &mut rng.sample(&actions_space)).collect::<Vec<i32>>();
+    let rnd: Vec<i32> = (0..m).map(|_| *actions_space.choose(&mut rng).unwrap() ).collect();
     for k in 0..5 {
         for r in p[k]..p[k +1] {
             println!("row: {}, col: {}, vals: {}", i[r as usize], k, x[r as usize]);
