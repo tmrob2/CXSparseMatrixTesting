@@ -1,6 +1,7 @@
 #![allow(non_snake_case)]
 
 use sparse::*;
+use rand::prelude;
 
 fn main() {
 
@@ -39,6 +40,21 @@ fn main() {
     // Ok now we have the sparse matrices we can print one and make sure it is what is expected
     print_matrix(A1);
     print_matrix(A2);
+
+    // now I need to get rows from the original matriccies and create an 'argmax' matrix from this
+    // Generate a random vector which represents a policy
+    let actions_space = [0, 1];
+    let mut rng = thread_rng();
+    let rnd = (0..m).map(|_|, &mut rng.sample(&actions_space)).collect::<Vec<i32>>();
+    for k in 0..5 {
+        for r in p[k]..p[k +1] {
+            println!("row: {}, col: {}, vals: {}", i[r as usize], k, x[r as usize]);
+            ii2.push(i[r as usize]);
+            jj2.push(k as i32);
+            vals2.push(x[r as usize]);
+        }
+    }
+
     //let mut i: Vec<i32> = vec![2, 1, 3, 0, 1, 3, 3, 1, 0, 2];
     //let mut j: Vec<i32> = vec![2, 0, 3, 2, 1, 0, 1, 3, 0, 1];
     //let mut vals: Vec<f64> = vec![3.0, 3.1, 1.0, 3.2, 2.9, 3.5, 0.4, 0.9, 4.5, 1.7];

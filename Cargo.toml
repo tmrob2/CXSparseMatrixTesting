@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 libc = "0.2.119"
 lapacke = "0.5.0"
+rand = "0.8.5"
 
 [lib]
 name = "sparse"
