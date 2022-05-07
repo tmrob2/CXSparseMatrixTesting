@@ -17,9 +17,6 @@ fn main() {
     //
     let m: usize = 5; // m is the original number of rows
     let n: usize = 4; // n is the original number of columns 
-    let nnz1: usize = val1.len();
-    let nnz2: usize = val2.len();
-
     //
     for k in 0..n { // cols
         for l in 0..m { // rows
@@ -33,6 +30,8 @@ fn main() {
             }
         }
     }
+    let nnz1 = val1.len();
+    let nnz2 = val2.len();
 
     let T1 = create_sparse_matrix(m as i32, n as i32, &mut i1[..], &mut j1[..], &mut val1[..]);
     let T2 = create_sparse_matrix(m as i32, n as i32, &mut i2[..], &mut j2[..], &mut val2[..]);
