@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 #![allow(non_camel_case_types)]
+#![allow(dead_code)]
 
 pub type size_t = ::std::os::raw::c_ulong;
 pub type cs_di = cs_di_sparse;

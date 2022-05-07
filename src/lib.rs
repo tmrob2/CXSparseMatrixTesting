@@ -4,10 +4,10 @@ use crate::c_binding::sparse_clib::*;
 extern crate lapacke;
 use lapacke::{dgesv, Layout};
 
-pub fn create_sparse_matrix(n: i32, rows: &mut [i32], cols: &mut [i32], x: &mut [f64])
+pub fn create_sparse_matrix(m: i32, n: i32, rows: &mut [i32], cols: &mut [i32], x: &mut [f64])
     -> *mut cs_di {
     unsafe {
-        let T: *mut cs_di = cs_di_spalloc(n, n, x.len() as i32, 1, 1);
+        let T: *mut cs_di = cs_di_spalloc(m, n, x.len() as i32, 1, 1);
         for (k, elem) in x.iter().enumerate() {
             cs_di_entry(T, rows[k], cols[k], *elem);
         }
