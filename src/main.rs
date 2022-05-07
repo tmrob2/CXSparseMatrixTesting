@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use sparse::*;
-use rand::prelude;
+use rand::prelude::*;
 
 fn main() {
 
