@@ -45,8 +45,8 @@ fn main() {
     let AT1 = transpose(A1, nnz1 as i32);
     let AT2 = transpose(A2, nnz2 as i32);
     // At this point we need to deconstruct the tranpose matrices into their component parts in compressed col fmt
-    let Acomp1 = deconstruct(AT1, nnz1, n);
-    let Acomp2 = deconstruct(AT2, nnz2, n);
+    let Acomp1 = deconstruct(AT1, nnz1, n + 1);
+    let Acomp2 = deconstruct(AT2, nnz2, n + 1);
 
     // Initialise the matrix triple
     let mut argmax_i: Vec<i32> = Vec::new();
