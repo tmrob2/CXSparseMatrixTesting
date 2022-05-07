@@ -67,6 +67,11 @@ fn main() {
         let p = &matrix_components.as_ref().unwrap().p;
         let i = &matrix_components.as_ref().unwrap().i;
         let x = &matrix_components.as_ref().unwrap().x;
+        println!("matrix components");
+        println!("i: {:?}", i);
+        println!("p: {:?}", p);
+        println!("x: {:?}", x);
+    
         for r in p[k]..p[k +1] { // for each row recorded in the sparse coord list for column k
             println!("row: {}, col: {}, vals: {}", i[r as usize], k, x[r as usize]);
             argmax_j.push(i[r as usize]);
