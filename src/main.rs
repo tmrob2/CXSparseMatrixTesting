@@ -31,8 +31,8 @@ fn main() {
         }
     }
 
-    let T1 = create_sparse_matrix(m, n, &mut i1[..], &mut j1[..], &mut val1[..]);
-    let T2 = create_sparse_matrix(m, n, &mut i2[..], &mut j2[..], &mut val2[..]);
+    let T1 = create_sparse_matrix(m as i32, n as i32, &mut i1[..], &mut j1[..], &mut val1[..]);
+    let T2 = create_sparse_matrix(m as i32, n as i32, &mut i2[..], &mut j2[..], &mut val2[..]);
     let A1 = convert_to_compressed(T1);
     let A2 = convert_to_compressed(T2);
 
