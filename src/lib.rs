@@ -3,6 +3,7 @@ mod c_binding;
 use crate::c_binding::sparse_clib::*;
 extern crate lapacke;
 use lapacke::{dgesv, Layout};
+use rayon::prelude::*;
 
 pub fn create_sparse_matrix(m: i32, n: i32, rows: &mut [i32], cols: &mut [i32], x: &mut [f64])
     -> *mut cs_di {
@@ -110,6 +111,20 @@ pub fn deconstruct(A: *mut cs_di, nnz: usize, cols: usize) -> SparseMatrixCompon
         println!("Deconstruction:\ni: {:?}\np: {:?}\nx: {:?}", i, p, x);
     }
     SparseMatrixComponents {i, p, x}
+}
+
+pub struct Data {
+    pub x: *mut cs_di,
+    pub nnz: i32
+}
+
+impl Data {
+    pub fn par_transpose(&self, k: i32) -> *mut cs_di {
+        let vreturn = (0..k)
+            .into_par_iter()
+            .map(|_| transpose(self.x, self.nnz))
+            .collect();
+    }
 }
 
 #[cfg(test)]

@@ -2,6 +2,8 @@
 #![allow(non_camel_case_types)]
 #![allow(dead_code)]
 
+use std::marker::{Send, Sync};
+
 pub type size_t = ::std::os::raw::c_ulong;
 pub type cs_di = cs_di_sparse;
 pub type cs_din = cs_di_numeric;
@@ -40,6 +42,9 @@ pub struct cs_di_sparse {
     pub x: *mut f64,
     pub nz: ::std::os::raw::c_int,
 }
+
+unsafe impl Send for cs_di { }
+unsafe impl Sync for cs_di { }
 
 extern "C" {
     pub fn cs_di_spalloc(
