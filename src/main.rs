@@ -90,4 +90,9 @@ fn main() {
         nnz: argmax_vals.len() as i32
     };
 
+    let r = data.par_transpose(5);
+    for mat in r.iter() {
+        print_matrix(mat);
+    }
+
 }

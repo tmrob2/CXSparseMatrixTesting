@@ -119,11 +119,12 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn par_transpose(&self, k: i32) -> *mut cs_di {
+    pub fn par_transpose(&self, k: i32) -> Vec<*mut cs_di> {
         let vreturn = (0..k)
             .into_par_iter()
             .map(|_| transpose(self.x, self.nnz))
             .collect();
+        vreturn
     }
 }
 
