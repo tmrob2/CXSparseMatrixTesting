@@ -39,7 +39,7 @@ pub fn transpose(A: *mut cs_di, nnz: i32) -> *mut cs_di {
 pub fn sparse_transpose(A: &Sparse, nnz: i32) -> Sparse {
     let m = A.m;
     let n = A.n;
-    let cs_A = sparse_to_cs(*A);
+    let cs_A = sparse_to_cs(A);
     let AT = transpose(cs_A, nnz);
     unsafe {
         cs_di_spfree(cs_A);
@@ -142,7 +142,7 @@ impl Sparse {
     }
 }
 
-pub fn sparse_to_cs(sparse: Sparse) -> *mut cs_di {
+pub fn sparse_to_cs(sparse: &Sparse) -> *mut cs_di {
     //create_sparse_matrix(sparse.m, sparse.n, sparse.)
     let (mut i, mut j, mut x) =
         compressed_to_triple(sparse.n as usize, &sparse.p[..], &sparse.i[..], &sparse.x[..]);
