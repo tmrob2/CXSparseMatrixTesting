@@ -142,7 +142,7 @@ impl Sparse {
     }
 }
 
-pub fn sparse_to_cs(sparse: &Sparse) -> *mut cs_di {
+pub fn sparse_to_cs(sparse: Sparse) -> *mut cs_di {
     //create_sparse_matrix(sparse.m, sparse.n, sparse.)
     let (mut i, mut j, mut x) =
         compressed_to_triple(sparse.n as usize, &sparse.p[..], &sparse.i[..], &sparse.x[..]);
