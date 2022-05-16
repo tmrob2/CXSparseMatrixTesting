@@ -4,6 +4,8 @@ use crate::c_binding::sparse_clib::*;
 extern crate lapacke;
 use lapacke::{dgesv, Layout};
 use rayon::prelude::*;
+use serde::{Serialize, Deserialize};
+use serde_yaml::{self};
 
 pub fn create_sparse_matrix(m: i32, n: i32, rows: &mut [i32], cols: &mut [i32], x: &mut [f64])
     -> *mut cs_di {
@@ -32,6 +34,17 @@ pub fn transpose(A: *mut cs_di, nnz: i32) -> *mut cs_di {
     unsafe {
         cs_di_transpose(A, nnz)
     }
+}
+
+pub fn sparse_transpose(A: &Sparse, nnz: i32) -> Sparse {
+    let m = A.m;
+    let n = A.n;
+    let cs_A = sparse_to_cs(A);
+    let AT = transpose(cs_A, nnz);
+    unsafe {
+        cs_di_spfree(cs_A);
+    }
+    c_to_rust_and_destroy(AT, nnz, m, n)
 }
 
 pub fn multAxA(A: *mut cs_di, B: *mut cs_di) -> *mut cs_di {
@@ -100,6 +113,83 @@ pub struct SparseMatrixComponents {
     pub x: Vec<f64>  // values per column row indices
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+// We should be able to run Rayon with this structure
+pub struct Sparse {
+    pub nzmax: i32,
+    pub m: i32,
+    pub n: i32,
+    pub p: Vec<i32>,
+    pub i: Vec<i32>,
+    pub x: Vec<f64>,
+    pub nz: i32,
+}
+
+impl Sparse {
+    pub fn store_matrix_as_yaml(&self, filename: &str) {
+        let f = std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(filename)
+            .expect("Couldn't open file");
+        serde_yaml::to_writer(f, &self).unwrap();
+    }
+
+    pub fn read_matrix_from_file(filename: &str) -> Sparse {
+        let f = std::fs::File::open(filename).expect("Error opening file");
+        let sparse: Sparse = serde_yaml::from_reader(f).expect("Could not read yaml into sparse");
+        sparse
+    }
+}
+
+pub fn sparse_to_cs(sparse: &Sparse) -> *mut cs_di {
+    //create_sparse_matrix(sparse.m, sparse.n, sparse.)
+    let (mut i, mut j, mut x) =
+        compressed_to_triple(sparse.n as usize, &sparse.p[..], &sparse.i[..], &sparse.x[..]);
+    let T =
+        create_sparse_matrix(sparse.m, sparse.n, &mut i[..], &mut j[..], &mut x[..]);
+    let A = convert_to_compressed(T);
+    A
+}
+
+pub fn c_to_rust_and_destroy(A: *mut cs_di, nnz: i32, m: i32, n: i32) -> Sparse {
+    let x: Vec<f64>;
+    let p: Vec<i32>;
+    let i: Vec<i32>;
+    unsafe {
+        x = Vec::from_raw_parts((*A).x as *mut f64, nnz as usize, nnz as usize);
+        i = Vec::from_raw_parts((*A).i as *mut i32, nnz as usize, nnz as usize);
+        p = Vec::from_raw_parts((*A).p as *mut i32, m as usize, m as usize);
+        //println!("Deconstruction:\ni: {:?}\np: {:?}\nx: {:?}", i, p, x);
+        //cs_di_spfree(A);
+    }
+    Sparse {
+        nzmax: nnz,
+        m,
+        n,
+        p,
+        i,
+        x,
+        nz: nnz
+    }
+}
+
+/// n: number of cols
+pub fn compressed_to_triple(n: usize, p: &[i32], i: &[i32], x: &[f64]) -> (Vec<i32>, Vec<i32>, Vec<f64>) {
+    let mut ii: Vec<i32> = Vec::new();
+    let mut jj: Vec<i32> = Vec::new();
+    let mut vals: Vec<f64> = Vec::new();
+    for k in 0..n { // for each column of the tranpose matrix
+        for r in p[k]..p[k +1] {
+            // for each row recorded in the sparse coord list for column k
+            ii.push(i[r as usize]);
+            jj.push(k as i32);
+            vals.push(x[r as usize]);
+        }
+    }
+    (ii, jj, vals)
+}
+
 pub fn deconstruct(A: *mut cs_di, nnz: usize, cols: usize) -> SparseMatrixComponents {
     let x: Vec<f64>;
     let p: Vec<i32>;
@@ -114,15 +204,14 @@ pub fn deconstruct(A: *mut cs_di, nnz: usize, cols: usize) -> SparseMatrixCompon
 }
 
 pub struct Data {
-    pub x: *mut cs_di,
-    pub nnz: i32
+    pub x: Sparse
 }
 
 impl Data {
-    pub fn par_transpose(&self, k: i32) -> Vec<*mut cs_di> {
+    pub fn par_transpose(&self, k: i32) -> Vec<Sparse> {
         let vreturn = (0..k)
             .into_par_iter()
-            .map(|_| transpose(self.x, self.nnz))
+            .map(|_| sparse_transpose(&self.x, self.x.nz))
             .collect();
         vreturn
     }

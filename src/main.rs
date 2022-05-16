@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use std::time::Instant;
 use sparse::*;
 use rand::prelude::*;
 use rayon::prelude::*;
@@ -85,14 +86,26 @@ fn main() {
     let argmaxA = convert_to_compressed(argmaxT);
     print_matrix(argmaxA);
 
+    let A = c_to_rust_and_destroy(argmaxA, argmax_vals.len() as i32, (m + 1) as i32, n as i32);
+
     let data = Data {
-        x: argmaxA,
-        nnz: argmax_vals.len() as i32
+        x: A,
     };
 
-    let r = data.par_transpose(5);
-    for mat in r.iter() {
-        print_matrix(mat);
-    }
+    //sparse_transpose(&data.x, data.x.nz);
+
+    let r = data.par_transpose(1_000_000);
+    //for mat in r.iter() {
+    //    print_matrix(sparse_to_cs(mat))
+    //}
+    let t1 = Instant::now();
+    data.x.store_matrix_as_yaml("test_mat_store.yml");
+    println!("time to write matrix: {}", t1.elapsed().as_secs_f64());
+
+    let t1 = Instant::now();
+    let S = Sparse::read_matrix_from_file("test_mat_store.yml");
+    println!("time to write matrix: {}", t1.elapsed().as_secs_f64());
+
+    sparse_to_cs(&S)
 
 }

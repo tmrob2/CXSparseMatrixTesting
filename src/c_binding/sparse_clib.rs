@@ -73,6 +73,9 @@ extern "C" {
     pub fn cs_di_malloc(n: ::std::os::raw::c_int, size: size_t) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
+    pub fn cs_di_free(p: *mut ::std::os::raw::c_void) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
     pub fn cs_di_entry(
         T: *mut cs_di,
         i: ::std::os::raw::c_int,
