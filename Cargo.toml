@@ -12,6 +12,7 @@ rand = "0.8.5"
 rayon = "1.5.3"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
+ffi-convert = "0.5.0"
 #crossbeam = "0.8.1"
 
 [lib]
@@ -20,3 +21,11 @@ path = "src/lib.rs"
 
 [build-dependencies]
 bindgen = "0.59.2"
+
+[[bin]]
+name = "main"
+path = "src/bin/main.rs.rs"
+
+[[bin]]
+name = "thread"
+path = "src/bin/threading.rs"

@@ -86,7 +86,7 @@ fn main() {
     let argmaxA = convert_to_compressed(argmaxT);
     print_matrix(argmaxA);
 
-    let A = c_to_rust_and_destroy(argmaxA, argmax_vals.len() as i32, (m + 1) as i32, n as i32);
+    let A = cs_to_rust_and_destroy(argmaxA, argmax_vals.len() as i32, (m + 1) as i32, n as i32);
 
     let data = Data {
         x: A,
@@ -105,7 +105,5 @@ fn main() {
     let t1 = Instant::now();
     let S = Sparse::read_matrix_from_file("test_mat_store.yml");
     println!("time to write matrix: {}", t1.elapsed().as_secs_f64());
-
-    sparse_to_cs(&S)
 
 }

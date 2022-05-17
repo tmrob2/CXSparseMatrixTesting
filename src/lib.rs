@@ -1,5 +1,8 @@
 #![allow(non_snake_case)]
 mod c_binding;
+
+use std::collections::HashMap;
+use std::fs;
 use crate::c_binding::sparse_clib::*;
 extern crate lapacke;
 use lapacke::{dgesv, Layout};
@@ -44,7 +47,13 @@ pub fn sparse_transpose(A: &Sparse, nnz: i32) -> Sparse {
     unsafe {
         cs_di_spfree(cs_A);
     }
-    c_to_rust_and_destroy(AT, nnz, m, n)
+    cs_to_rust_and_destroy(AT, nnz, m, n)
+}
+
+pub fn free_sparse(A: *mut cs_di_sparse) {
+    unsafe {
+        cs_di_spfree(A);
+    }
 }
 
 pub fn multAxA(A: *mut cs_di, B: *mut cs_di) -> *mut cs_di {
@@ -74,6 +83,12 @@ pub fn solve_qr(A: *mut cs_di, b: &mut [f64], order: i32) {
 pub fn spfree(A: *mut cs_di) {
     unsafe {
         cs_di_spfree(A);
+    }
+}
+
+pub fn spalloc(m: i32, n: i32, nzmax: i32, values: i32, t: i32) -> *mut cs_di {
+    unsafe {
+        cs_di_spalloc(m, n, nzmax, values, t)
     }
 }
 
@@ -127,6 +142,16 @@ pub struct Sparse {
 
 impl Sparse {
     pub fn store_matrix_as_yaml(&self, filename: &str) {
+        let path = std::env::current_dir().unwrap().join(filename);
+        //let path_str = String::from(path.to_string_lossy());
+        match fs::remove_file(path) {
+            Ok(_) => {
+                // the file has been removed
+            }
+            Err(_) => {
+                // no file exists which is fine
+            }
+        }
         let f = std::fs::OpenOptions::new()
             .write(true)
             .create(true)
@@ -136,10 +161,22 @@ impl Sparse {
     }
 
     pub fn read_matrix_from_file(filename: &str) -> Sparse {
+        //println!("opening: {:?}", filename);
         let f = std::fs::File::open(filename).expect("Error opening file");
         let sparse: Sparse = serde_yaml::from_reader(f).expect("Could not read yaml into sparse");
         sparse
     }
+}
+
+pub fn sparse_to_cs2(sparse: &mut Sparse) -> *mut cs_di {
+    let A = spalloc(sparse.m, sparse.n, sparse.nzmax, sparse.nz, 0);
+    unsafe {
+        (*A).i = sparse.i.as_mut_ptr();
+        (*A).i = sparse.i.as_mut_ptr();
+        (*A).p = sparse.p.as_mut_ptr();
+        (*A).x = sparse.x.as_mut_ptr();
+    }
+    A
 }
 
 pub fn sparse_to_cs(sparse: &Sparse) -> *mut cs_di {
@@ -152,7 +189,7 @@ pub fn sparse_to_cs(sparse: &Sparse) -> *mut cs_di {
     A
 }
 
-pub fn c_to_rust_and_destroy(A: *mut cs_di, nnz: i32, m: i32, n: i32) -> Sparse {
+pub fn cs_to_rust_and_destroy(A: *mut cs_di, nnz: i32, m: i32, n: i32) -> Sparse {
     let x: Vec<f64>;
     let p: Vec<i32>;
     let i: Vec<i32>;
@@ -164,7 +201,7 @@ pub fn c_to_rust_and_destroy(A: *mut cs_di, nnz: i32, m: i32, n: i32) -> Sparse 
         //cs_di_spfree(A);
     }
     Sparse {
-        nzmax: nnz,
+        nzmax: nnz + 1,
         m,
         n,
         p,
@@ -215,6 +252,16 @@ impl Data {
             .collect();
         vreturn
     }
+}
+
+pub fn path_exists(path: &str) -> bool {
+    fs::metadata(path).is_ok()
+}
+
+pub struct Meta {
+    pub A: Sparse,
+    pub a: i32,
+    pub t: i32
 }
 
 #[cfg(test)]
