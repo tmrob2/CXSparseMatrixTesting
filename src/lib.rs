@@ -6,9 +6,9 @@ use std::fs;
 use crate::c_binding::sparse_clib::*;
 extern crate lapacke;
 use lapacke::{dgesv, Layout};
-use rayon::prelude::*;
 use serde::{Serialize, Deserialize};
 use serde_yaml::{self};
+use std::io::{BufWriter, Write};
 
 pub fn create_sparse_matrix(m: i32, n: i32, rows: &mut [i32], cols: &mut [i32], x: &mut [f64])
     -> *mut cs_di {
@@ -39,16 +39,16 @@ pub fn transpose(A: *mut cs_di, nnz: i32) -> *mut cs_di {
     }
 }
 
-pub fn sparse_transpose(A: &Sparse, nnz: i32) -> Sparse {
-    let m = A.m;
-    let n = A.n;
-    let cs_A = sparse_to_cs(A);
-    let AT = transpose(cs_A, nnz);
-    unsafe {
-        cs_di_spfree(cs_A);
-    }
-    cs_to_rust_and_destroy(AT, nnz, m, n)
-}
+//pub fn sparse_transpose(A: &Sparse, nnz: i32) -> Sparse {
+//    let m = A.m;
+//    let n = A.n;
+//    let cs_A = sparse_to_cs(A);
+//    let AT = transpose(cs_A, nnz);
+//    unsafe {
+//        cs_di_spfree(cs_A);
+//    }
+//    //cs_to_rust_and_destroy(AT, nnz, m, n)
+//}
 
 pub fn free_sparse(A: *mut cs_di_sparse) {
     unsafe {
@@ -168,6 +168,49 @@ impl Sparse {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+// We should be able to run Rayon with this structure
+pub struct COO {
+    pub nzmax: i32,
+    pub m: i32,
+    pub n: i32,
+    pub i: Vec<i32>,
+    pub j: Vec<i32>,
+    pub x: Vec<f64>,
+    pub nz: i32,
+}
+
+impl COO {
+    pub fn store_matrix_as_yaml(&self, filename: &str) {
+        let mut path = std::env::var("SCPM_TEST").unwrap();
+        path.push_str(filename);
+        //let path_str = String::from(path.to_string_lossy());
+        match fs::remove_file(path.as_str()) {
+            Ok(_) => {
+                // the file has been removed
+            }
+            Err(_) => {
+                // no file exists which is fine
+            }
+        }
+        let mut f = BufWriter::new(std::fs::OpenOptions::new()
+            .write(true)
+            .create(true)
+            .open(path.as_str())
+            .expect("Couldn't open file"));
+        serde_yaml::to_writer(f, &self).unwrap();
+        println!("finished writing: {}", filename);
+        f.flush().unwrap();
+    }
+
+    pub fn read_matrix_from_file(filename: &str) -> COO {
+        println!("opening: {:?}", filename);
+        let f = std::fs::File::open(filename).expect("Error opening file");
+        let triple: COO = serde_yaml::from_reader(f).expect("Could not read yaml into sparse");
+        triple
+    }
+}
+
 pub fn sparse_to_cs2(sparse: &mut Sparse) -> *mut cs_di {
     let A = spalloc(sparse.m, sparse.n, sparse.nzmax, sparse.nz, 0);
     unsafe {
@@ -176,7 +219,12 @@ pub fn sparse_to_cs2(sparse: &mut Sparse) -> *mut cs_di {
         (*A).p = sparse.p.as_mut_ptr();
         (*A).x = sparse.x.as_mut_ptr();
     }
+    print_matrix(A);
     A
+}
+
+pub fn sparse_to_cs3(sparse: &mut COO) -> *mut cs_di {
+    todo!()
 }
 
 pub fn sparse_to_cs(sparse: &Sparse) -> *mut cs_di {
@@ -238,20 +286,6 @@ pub fn deconstruct(A: *mut cs_di, nnz: usize, cols: usize) -> SparseMatrixCompon
         println!("Deconstruction:\ni: {:?}\np: {:?}\nx: {:?}", i, p, x);
     }
     SparseMatrixComponents {i, p, x}
-}
-
-pub struct Data {
-    pub x: Sparse
-}
-
-impl Data {
-    pub fn par_transpose(&self, k: i32) -> Vec<Sparse> {
-        let vreturn = (0..k)
-            .into_par_iter()
-            .map(|_| sparse_transpose(&self.x, self.x.nz))
-            .collect();
-        vreturn
-    }
 }
 
 pub fn path_exists(path: &str) -> bool {

@@ -93,8 +93,6 @@ fn main() {
     };
 
     //sparse_transpose(&data.x, data.x.nz);
-
-    let r = data.par_transpose(1_000_000);
     //for mat in r.iter() {
     //    print_matrix(sparse_to_cs(mat))
     //}
